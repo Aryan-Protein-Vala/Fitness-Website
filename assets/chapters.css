@@ -568,3 +568,40 @@
     justify-self: center;
   }
 }
+
+.buy-action[aria-busy="true"] { opacity: .7; }
+
+.checkout-dialog {
+  position: fixed;
+  width: min(32rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  margin: auto;
+  padding: clamp(1.25rem, 4vw, 2.25rem);
+  border: 1px solid var(--rule-dark);
+  background: var(--ink);
+  color: var(--paper);
+}
+.checkout-dialog::backdrop { background: rgb(16 17 15 / 74%); }
+.checkout-dialog h2 {
+  padding-right: 2rem;
+  font-size: clamp(2.75rem, 8vw, 4.2rem);
+  text-transform: uppercase;
+}
+.checkout-dialog-message { margin-top: 1rem; color: var(--muted-dark); }
+.checkout-close {
+  position: absolute;
+  top: .6rem;
+  right: .6rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--paper);
+  font-size: 1.65rem;
+}
+.checkout-reference {
+  margin-top: .9rem;
+  color: var(--acid);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
