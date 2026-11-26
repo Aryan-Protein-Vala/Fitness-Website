@@ -40,12 +40,13 @@
   const unwrap = document.querySelector(".unwrap-button");
   const roadmap = document.querySelector(".roadmap");
   const roadmapStage = roadmap.querySelector(".roadmap-stage");
-  const roadmapCamera = roadmap.querySelector(".roadmap-camera");
-  const ruler = roadmap.querySelector(".roadmap-ruler");
-  const roadmapWeeks = [...ruler.querySelectorAll(".roadmap-week")];
-  const roadmapPhases = [...roadmap.querySelectorAll(".phase-copy")];
+  const roadmapOverview = roadmap.querySelector(".roadmap-overview");
+  const roadmapPreview = roadmap.querySelector(".roadmap-preview");
+  const roadmapSheets = [...roadmap.querySelectorAll(".roadmap-sheet-inner")];
+  const roadmapIndex = roadmap.querySelector(".roadmap-index-current");
   const bookArt = [...document.querySelectorAll(".book-art")];
-  const coachPhoto = document.querySelector(".coach-note img");
+  const coaching = document.querySelector(".coaching");
+  const coachPrint = coaching.querySelector(".coach-print");
   const openThreshold = .78;
   const clamp = (value) => Math.min(1, Math.max(0, value));
   const segment = (value, start, end) => clamp((value - start) / (end - start));
@@ -90,67 +91,96 @@
   let paperOverride = null;
   let paperAnimation = null;
   let paperIsOpen = true;
+  let roadmapGeometry;
   let lastRoadmapProgress = null;
+  let lastRoadmapWeek = 1;
 
-  // Each phase has an approach, a short hold, and a release into the next.
-  const phaseBeats = [
-    [.135, .285, .325, .49],
-    [.31, .475, .515, .675],
-    [.50, .665, .72, .875],
-  ];
-
-  function measureRoadmap() {
-    const viewportHeight = Math.min(window.innerHeight, root.clientHeight);
-    const rem = parseFloat(getComputedStyle(root).fontSize);
-    const requiredHeight = roadmapCamera.offsetHeight * 1.048 + 2.5 * rem;
-    const fits = requiredHeight <= viewportHeight;
-
-    roadmap.classList.toggle("roadmap-pinned", fits);
-    if (fits) {
-      roadmap.style.setProperty("--camera-ruler", `${ruler.offsetTop + ruler.offsetHeight / 2}px`);
-    } else {
-      roadmap.removeAttribute("style");
-      lastRoadmapProgress = null;
-    }
-    scheduleScene();
+  function resetRoadmap() {
+    roadmap.classList.remove("roadmap-pinned");
+    roadmap.removeAttribute("style");
+    roadmapGeometry = undefined;
+    lastRoadmapProgress = null;
   }
 
-  const roadmapObserver = new ResizeObserver(measureRoadmap);
+  function measureRoadmap() {
+    const base = parseFloat(getComputedStyle(root).fontSize);
+    if (root.clientHeight < 31 * base) {
+      resetRoadmap();
+      scheduleScene();
+      return;
+    }
 
-  function scrubBeat(progress, start, arrive, release, end) {
-    return smoothstep(segment(progress, start, arrive))
-      * (1 - smoothstep(segment(progress, release, end)));
+    roadmap.classList.add("roadmap-pinned");
+    const width = roadmapStage.clientWidth;
+    const height = roadmapStage.clientHeight;
+    roadmap.style.setProperty("--roadmap-aspect", width / height);
+
+    // Leave every week in normal document flow if zoom or a short viewport
+    // would make its number and notes overlap inside the pinned scene.
+    const fits = roadmapOverview.offsetHeight + base <= height && roadmapSheets.every((sheet) => {
+      const styles = getComputedStyle(sheet);
+      const padding = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+      const gaps = parseFloat(styles.rowGap) * 2;
+      const content = [...sheet.children].reduce((total, child) => total + child.offsetHeight, 0);
+      return content + padding + gaps <= height;
+    });
+    if (!fits) {
+      resetRoadmap();
+      scheduleScene();
+      return;
+    }
+
+    const stage = roadmapStage.getBoundingClientRect();
+    const preview = roadmapPreview.getBoundingClientRect();
+    const scale = Math.min(preview.width / width, preview.height / height);
+    const introDistance = height * .68;
+    const travelDistance = height * .52 * (roadmapSheets.length - 1);
+    const distance = introDistance + travelDistance + height * .4;
+
+    roadmapGeometry = {
+      scale,
+      x: preview.left - stage.left + (preview.width - width * scale) / 2,
+      y: preview.top - stage.top + (preview.height - height * scale) / 2,
+      zoomEnd: introDistance / distance,
+      travelEnd: (introDistance + travelDistance) / distance,
+    };
+    setProperties(roadmap, {
+      "--roadmap-ready": "visible",
+      "--roadmap-runway": `${distance}px`,
+    });
+    lastRoadmapProgress = null;
+    const position = pinnedProgress(roadmap.getBoundingClientRect(), roadmapStage.getBoundingClientRect());
+    renderRoadmap(position ?? 0);
+    scheduleScene();
   }
 
   function renderRoadmap(progress) {
     if (progress === lastRoadmapProgress) return;
     lastRoadmapProgress = progress;
 
-    const start = scrubBeat(progress, 0, .105, .13, .245);
-    const finish = scrubBeat(progress, .69, .855, .88, .97);
-    const endpointFocus = start + finish;
-    const readingPhases = scrubBeat(progress, .045, .17, .835, .97);
+    const { scale, x, y, zoomEnd, travelEnd } = roadmapGeometry;
+    const opening = smoothstep(segment(progress, .012, zoomEnd));
+    const travel = segment(progress, zoomEnd, travelEnd);
+    const rawWeek = travel * (roadmapSheets.length - 1);
+    const previousWeek = Math.floor(rawWeek);
+    const offset = rawWeek - previousWeek;
+    // Ease past the edges of each sheet while keeping one continuous rail.
+    const position = previousWeek + .6 * offset + .4 * smoothstep(offset);
+    const currentWeek = Math.round(position) + 1;
 
     setProperties(roadmap, {
-      "--weeks-fill": smoothstep(segment(progress, .105, .855)),
-      "--camera-focus": endpointFocus + (1 - endpointFocus) * .34 * readingPhases,
-      "--camera-anchor": `${25 + 50 * smoothstep(progress)}%`,
-      "--roadmap-heading-clarity": 1 - .12 * endpointFocus,
+      "--roadmap-x": `${x * (1 - opening)}px`,
+      "--roadmap-y": `${y * (1 - opening)}px`,
+      "--roadmap-scale": scale + (1 - scale) * opening,
+      "--preview-outline": .45 * (1 - opening),
+      "--roadmap-travel": `${-100 * position}%`,
+      "--roadmap-fill": (position + 1) / roadmapSheets.length,
+      "--roadmap-index-opacity": smoothstep(segment(opening, .86, 1)),
     });
-    roadmapWeeks[0].style.setProperty("--week-focus", start);
-    roadmapWeeks[1].style.setProperty("--week-focus", finish);
-
-    roadmapPhases.forEach((copy, index) => {
-      const beat = phaseBeats[index];
-      const focus = scrubBeat(progress, ...beat);
-      const revealed = smoothstep(segment(progress, beat[0], beat[1]));
-
-      setProperties(copy, {
-        "--phase-clarity": 1 - .12 * readingPhases * (1 - focus),
-        "--phase-lift": `${8 * readingPhases * (1 - revealed) - 6 * focus}px`,
-        "--phase-scale": 1 + .026 * focus,
-      });
-    });
+    if (currentWeek !== lastRoadmapWeek) {
+      lastRoadmapWeek = currentWeek;
+      roadmapIndex.textContent = String(currentWeek).padStart(2, "0");
+    }
   }
 
   function pinnedProgress(track, panel) {
@@ -200,10 +230,10 @@
     const manualBox = manualRunway.getBoundingClientRect();
     const introBox = manualIntro.getBoundingClientRect();
     const journalBox = journal.getBoundingClientRect();
-    const roadmapProgress = roadmap.classList.contains("roadmap-pinned")
+    const roadmapProgress = roadmapGeometry
       ? pinnedProgress(roadmap.getBoundingClientRect(), roadmapStage.getBoundingClientRect())
       : null;
-    const coachTop = coachPhoto.getBoundingClientRect().top;
+    const coachTop = coaching.getBoundingClientRect().top;
     const coverProgress = bookArt.map((art) => {
       const box = art.getBoundingClientRect();
       return clamp((height - box.top) / (height + box.height));
@@ -247,7 +277,7 @@
         "--cover-tilt": `${(index === 1 ? -1 : 1) * (1 - progress) * 2.2}deg`,
       });
     });
-    coachPhoto.style.setProperty("--photo-settle", clamp((height * .87 - coachTop) / (height * .56)));
+    coachPrint.style.setProperty("--photo-settle", clamp((height * .87 - coachTop) / (height * .56)));
   }
 
   function scheduleScene() {
@@ -287,7 +317,6 @@
       scheduleScene();
       window.addEventListener("scroll", scheduleScene, { passive: true });
       measureRoadmap();
-      roadmapObserver.observe(roadmapCamera);
       window.addEventListener("resize", measureRoadmap);
     } else {
       cancelAnimationFrame(frame);
@@ -296,10 +325,7 @@
       paperAnimation = null;
       window.removeEventListener("scroll", scheduleScene);
       window.removeEventListener("resize", measureRoadmap);
-      roadmapObserver.disconnect();
-      roadmap.classList.remove("roadmap-pinned");
-      roadmap.removeAttribute("style");
-      lastRoadmapProgress = null;
+      resetRoadmap();
       hero.classList.remove("hero-enter");
       reel.removeAttribute("style");
     }
@@ -410,6 +436,9 @@
   motionPreference.addEventListener("change", syncMotion);
   wheelInput.addEventListener("change", syncWheel);
   syncMotion();
+  document.fonts.ready.then(() => {
+    if (motionPreference.matches) measureRoadmap();
+  });
   setupFooterLens();
 
   if (motionPreference.matches && window.scrollY < 80) {
