@@ -505,21 +505,45 @@
   border-bottom: .65rem solid var(--acid);
   content: "";
 }
-.coach-print-window { position: relative; overflow: hidden; background: #36372c; }
+.coach-print-window {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: #36372c;
+  cursor: pointer;
+}
+.coach-print-window:focus-visible {
+  outline-color: var(--ink);
+  outline-offset: 3px;
+}
 .coach-print-window::after {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, rgb(15 16 12 / 26%) .45px, transparent .75px) 0 0 / 3px 3px;
+  background: radial-gradient(circle, rgb(15 16 12 / 13%) .45px, transparent .75px) 0 0 / 3px 3px;
   mix-blend-mode: multiply;
   pointer-events: none;
   content: "";
 }
-.coach-print img {
+.coach-print-window img {
   width: 100%;
   height: auto;
   aspect-ratio: 1;
   object-fit: cover;
-  filter: grayscale(1) contrast(1.16);
+}
+.coach-portrait-primary { filter: grayscale(1) contrast(1.08); }
+.coach-portrait-alternate {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  filter: saturate(.68) contrast(1.04);
+  transition: opacity 260ms var(--ease);
+}
+.coach-print-window[aria-pressed="true"] .coach-portrait-alternate { opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .coach-print-window:hover .coach-portrait-alternate { opacity: 1; }
 }
 .coach-print figcaption {
   display: flex;

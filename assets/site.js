@@ -51,6 +51,12 @@
   const bookArt = [...document.querySelectorAll(".book-art")];
   const coaching = document.querySelector(".coaching");
   const coachPrint = coaching.querySelector(".coach-print");
+  const portraitToggle = coachPrint.querySelector(".coach-print-window");
+  portraitToggle.addEventListener("click", () => {
+    const pressed = portraitToggle.getAttribute("aria-pressed") === "true";
+    portraitToggle.setAttribute("aria-pressed", String(!pressed));
+  });
+
   const openThreshold = .78;
   const clamp = (value) => Math.min(1, Math.max(0, value));
   const segment = (value, start, end) => clamp((value - start) / (end - start));
