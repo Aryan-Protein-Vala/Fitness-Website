@@ -1,0 +1,155 @@
+.lift-reel {
+  color: var(--ink);
+  background: var(--acid);
+}
+.lift-sticky {
+  position: relative;
+  isolation: isolate;
+  min-height: clamp(34rem, 93svh, 58rem);
+  overflow: clip;
+  display: grid;
+}
+.lift-layout {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-block: clamp(1.4rem, 5vh, 3.25rem);
+}
+.lift-register {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid rgb(21 22 19 / 38%);
+  padding-top: .65rem;
+  font-size: .875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.lift-caption {
+  display: grid;
+  gap: .8rem;
+  align-items: end;
+}
+.lift-caption h2 { font-size: clamp(3.4rem, 13vw, 8.75rem); }
+.lift-caption p {
+  max-width: 25ch;
+  font-weight: 550;
+  padding-block-end: .15rem;
+}
+.lift-art {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+}
+.lift-target {
+  position: absolute;
+  inset: 0;
+  transform: translateX(var(--target-shift, 0));
+  background:
+    linear-gradient(90deg, transparent calc(50% - .5px), rgb(21 22 19 / 22%) 50%, transparent calc(50% + .5px)),
+    linear-gradient(0deg, transparent calc(50% - .5px), rgb(21 22 19 / 22%) 50%, transparent calc(50% + .5px)),
+    repeating-radial-gradient(circle at center, transparent 0 calc(var(--lift-grid) - 1px), rgb(21 22 19 / 21%) calc(var(--lift-grid) - 1px) var(--lift-grid));
+  --lift-grid: clamp(2.35rem, 7vw, 5.2rem);
+  mask-image: radial-gradient(ellipse at center, #000 25%, transparent 73%);
+}
+.lift-number {
+  display: none;
+  position: absolute;
+  inset: 49% auto auto 50%;
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(21 22 19 / 38%);
+  font: 900 clamp(17rem, 66vw, 49rem)/.76 var(--display);
+  letter-spacing: -.04em;
+  transform: translate(calc(-50% + var(--type-shift, 0px)), -50%);
+}
+.lift-disc {
+  position: absolute;
+  inset: 43.5% auto auto 50%;
+  width: min(94vw, 54svh, 39rem);
+  aspect-ratio: 1;
+  transform: translate3d(calc(-50% + var(--disc-x, 0%)), calc(-50% + var(--disc-y, 0%)), 0)
+    rotate(var(--disc-turn, -13deg)) scale(var(--disc-scale, 1));
+  filter: drop-shadow(11px 21px 16px rgb(24 25 8 / 32%));
+}
+.lift-disc img { width: 100%; height: 100%; object-fit: contain; }
+.lift-sheet {
+  position: absolute;
+  inset: -4% -69% -4% 0;
+  background: var(--paper);
+  transform: translateX(var(--sheet-x, 115%));
+  clip-path: polygon(12% 0, 15% 8%, 13% 16%, 18% 25%, 18% 31%, 23% 38%, 21% 44%, 26% 52%, 25% 60%, 30% 66%, 28% 73%, 34% 82%, 32% 87%, 37% 95%, 36% 100%, 100% 100%, 100% 0);
+}
+.lift-sheet-shadow {
+  background: #b4b2a6;
+  margin-right: .65rem;
+}
+.lift-sheet-face {
+  background:
+    linear-gradient(115deg, #0000 37%, rgb(73 70 52 / 11%) 37.3%, #0000 50%),
+    var(--paper);
+}
+
+.paper-seal {
+  display: grid;
+  position: absolute;
+  inset: 49% auto auto 50%;
+  place-items: center;
+  gap: .25rem;
+  min-width: 8.7rem;
+  padding: .72rem .85rem .8rem;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 7px 18px rgb(20 20 10 / 26%);
+  transform: translate3d(-50%, calc(-50% + var(--seal-y, 0px)), 0)
+    rotate(var(--seal-spin, -7deg)) scale(var(--seal-scale, 1));
+  opacity: var(--seal-opacity, 0);
+}
+.paper-seal b {
+  font: 900 2.1rem/.86 var(--display);
+  letter-spacing: -.025em;
+}
+.paper-seal > span {
+  font-size: .73rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+.motion-on .book-art img {
+  transform: translateY(var(--cover-drift, 0%)) rotate(var(--cover-tilt, 0deg)) scale(1.075);
+}
+
+@media (min-width: 44rem) {
+  .lift-caption { grid-template-columns: minmax(0, 1fr) minmax(12rem, .39fr); }
+  .lift-caption h2 { font-size: clamp(3.6rem, 9.1vw, 8.75rem); }
+  .lift-disc { inset-block-start: 47%; }
+  .lift-number { display: block; }
+  .lift-sticky { min-height: clamp(35rem, 100svh, 70rem); }
+}
+
+@media (min-height: 37rem) {
+  .motion-on .lift-reel::after, .motion-on .manual-runway::after {
+    display: block;
+    content: "";
+  }
+  .motion-on .lift-reel::after { height: clamp(26rem, 104svh, 60rem); }
+  .motion-on .lift-sticky { position: sticky; top: 0; }
+  .motion-on .manual-runway::after { height: clamp(20rem, 76svh, 48rem); }
+  .motion-on .manual-intro {
+    position: sticky;
+    top: clamp(1.2rem, 9svh, 5rem);
+  }
+}
+@media (max-width: 43.99rem) and (min-height: 37rem) {
+  .motion-on .lift-reel::after { height: 74svh; }
+  .motion-on .manual-intro { top: clamp(1rem, 5svh, 3rem); }
+  .motion-on .manual-runway::after { height: 60svh; }
+}
+@media (min-width: 44rem) and (min-height: 37rem) {
+  .motion-on .manual-intro { min-height: min(73svh, 43rem); }
+  .motion-on .manual-runway .journal-frame { max-height: 72svh; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.lenis) { scroll-behavior: smooth; }
+}
