@@ -38,7 +38,12 @@
   const manualIntro = document.querySelector(".manual-intro");
   const journal = document.querySelector(".journal-frame");
   const unwrap = document.querySelector(".unwrap-button");
-  const ruler = document.querySelector(".roadmap-ruler");
+  const roadmap = document.querySelector(".roadmap");
+  const roadmapStage = roadmap.querySelector(".roadmap-stage");
+  const roadmapCamera = roadmap.querySelector(".roadmap-camera");
+  const ruler = roadmap.querySelector(".roadmap-ruler");
+  const roadmapWeeks = [...ruler.querySelectorAll(".roadmap-week")];
+  const roadmapPhases = [...roadmap.querySelectorAll(".phase-copy")];
   const bookArt = [...document.querySelectorAll(".book-art")];
   const coachPhoto = document.querySelector(".coach-note img");
   const openThreshold = .78;
@@ -85,6 +90,68 @@
   let paperOverride = null;
   let paperAnimation = null;
   let paperIsOpen = true;
+  let lastRoadmapProgress = null;
+
+  // Each phase has an approach, a short hold, and a release into the next.
+  const phaseBeats = [
+    [.135, .285, .325, .49],
+    [.31, .475, .515, .675],
+    [.50, .665, .72, .875],
+  ];
+
+  function measureRoadmap() {
+    const viewportHeight = Math.min(window.innerHeight, root.clientHeight);
+    const rem = parseFloat(getComputedStyle(root).fontSize);
+    const requiredHeight = roadmapCamera.offsetHeight * 1.048 + 2.5 * rem;
+    const fits = requiredHeight <= viewportHeight;
+
+    roadmap.classList.toggle("roadmap-pinned", fits);
+    if (fits) {
+      roadmap.style.setProperty("--camera-ruler", `${ruler.offsetTop + ruler.offsetHeight / 2}px`);
+    } else {
+      roadmap.removeAttribute("style");
+      lastRoadmapProgress = null;
+    }
+    scheduleScene();
+  }
+
+  const roadmapObserver = new ResizeObserver(measureRoadmap);
+
+  function scrubBeat(progress, start, arrive, release, end) {
+    return smoothstep(segment(progress, start, arrive))
+      * (1 - smoothstep(segment(progress, release, end)));
+  }
+
+  function renderRoadmap(progress) {
+    if (progress === lastRoadmapProgress) return;
+    lastRoadmapProgress = progress;
+
+    const start = scrubBeat(progress, 0, .105, .13, .245);
+    const finish = scrubBeat(progress, .69, .855, .88, .97);
+    const endpointFocus = start + finish;
+    const readingPhases = scrubBeat(progress, .045, .17, .835, .97);
+
+    setProperties(roadmap, {
+      "--weeks-fill": smoothstep(segment(progress, .105, .855)),
+      "--camera-focus": endpointFocus + (1 - endpointFocus) * .34 * readingPhases,
+      "--camera-anchor": `${25 + 50 * smoothstep(progress)}%`,
+      "--roadmap-heading-clarity": 1 - .12 * endpointFocus,
+    });
+    roadmapWeeks[0].style.setProperty("--week-focus", start);
+    roadmapWeeks[1].style.setProperty("--week-focus", finish);
+
+    roadmapPhases.forEach((copy, index) => {
+      const beat = phaseBeats[index];
+      const focus = scrubBeat(progress, ...beat);
+      const revealed = smoothstep(segment(progress, beat[0], beat[1]));
+
+      setProperties(copy, {
+        "--phase-clarity": 1 - .12 * readingPhases * (1 - focus),
+        "--phase-lift": `${8 * readingPhases * (1 - revealed) - 6 * focus}px`,
+        "--phase-scale": 1 + .026 * focus,
+      });
+    });
+  }
 
   function pinnedProgress(track, panel) {
     const travel = track.height - panel.height;
@@ -133,7 +200,9 @@
     const manualBox = manualRunway.getBoundingClientRect();
     const introBox = manualIntro.getBoundingClientRect();
     const journalBox = journal.getBoundingClientRect();
-    const rulerBox = ruler.getBoundingClientRect();
+    const roadmapProgress = roadmap.classList.contains("roadmap-pinned")
+      ? pinnedProgress(roadmap.getBoundingClientRect(), roadmapStage.getBoundingClientRect())
+      : null;
     const coachTop = coachPhoto.getBoundingClientRect().top;
     const coverProgress = bookArt.map((art) => {
       const box = art.getBoundingClientRect();
@@ -144,7 +213,6 @@
     const scrollFold = pinnedProgress(manualBox, introBox)
       ?? clamp((height * .88 - journalBox.top) / (height * .82));
     const afterHero = clamp(-heroBox.top / heroBox.height);
-    const scrollRuler = clamp((height * .82 - rulerBox.top) / (height * .43));
 
     if (journalBox.bottom < 0 || journalBox.top > height * 1.15) {
       paperOverride = null;
@@ -171,7 +239,7 @@
     else if (reel.hasAttribute("style")) reel.removeAttribute("style");
     renderPaper(paperProgress);
     heroMedia.style.setProperty("--hero-drift", `${afterHero * 78}px`);
-    ruler.style.setProperty("--weeks-fill", scrollRuler);
+    if (roadmapProgress !== null) renderRoadmap(roadmapProgress);
     bookArt.forEach((art, index) => {
       const progress = coverProgress[index];
       setProperties(art, {
@@ -218,14 +286,20 @@
       unwrap.textContent = "Wrap the journal";
       scheduleScene();
       window.addEventListener("scroll", scheduleScene, { passive: true });
-      window.addEventListener("resize", scheduleScene);
+      measureRoadmap();
+      roadmapObserver.observe(roadmapCamera);
+      window.addEventListener("resize", measureRoadmap);
     } else {
       cancelAnimationFrame(frame);
       frame = 0;
       paperOverride = null;
       paperAnimation = null;
       window.removeEventListener("scroll", scheduleScene);
-      window.removeEventListener("resize", scheduleScene);
+      window.removeEventListener("resize", measureRoadmap);
+      roadmapObserver.disconnect();
+      roadmap.classList.remove("roadmap-pinned");
+      roadmap.removeAttribute("style");
+      lastRoadmapProgress = null;
       hero.classList.remove("hero-enter");
       reel.removeAttribute("style");
     }

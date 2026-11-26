@@ -509,7 +509,7 @@ summary:hover { color: #54582a; }
 }
 .inside-grid p { margin-top: .65rem; color: var(--muted-dark); max-width: 36ch; }
 
-.roadmap {
+.roadmap-stage {
   padding: clamp(4rem, 9vw, 8.25rem) 0 clamp(4rem, 8.3vw, 7.2rem);
 }
 .roadmap-ruler {
@@ -561,7 +561,7 @@ summary:hover { color: #54582a; }
 .phases li {
   display: grid;
   grid-template-columns: 2.25rem 1fr;
-  gap: .42rem .65rem;
+  column-gap: .65rem;
   align-items: baseline;
   align-content: start;
   border-bottom: 1px solid var(--rule);
@@ -574,8 +574,13 @@ summary:hover { color: #54582a; }
   font-weight: 700;
   color: var(--muted);
 }
+.phase-copy {
+  display: grid;
+  min-width: 0;
+  gap: .42rem;
+}
 .phases h3 { line-height: 1; }
-.phases p { grid-column: 2; color: var(--muted); max-width: 33ch; }
+.phases p { color: var(--muted); max-width: 33ch; }
 
 .coaching {
   position: relative;

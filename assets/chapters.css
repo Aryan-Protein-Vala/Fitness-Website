@@ -150,6 +150,53 @@
   .motion-on .manual-runway .journal-frame { max-height: 72svh; }
 }
 
+/* The sticky stage stays in flow; only the camera and text move during the scrub. */
+.roadmap {
+  overflow: clip;
+  --roadmap-zoom: .048;
+  --roadmap-week-zoom: .2;
+}
+.roadmap-camera { position: relative; }
+.motion-on .roadmap-pinned::after {
+  display: block;
+  height: clamp(32rem, 142svh, 85rem);
+  content: "";
+}
+.motion-on .roadmap-pinned .roadmap-stage {
+  position: sticky;
+  top: 0;
+  display: grid;
+  align-content: center;
+  min-height: 100svh;
+  padding-block: 1.25rem;
+}
+.motion-on .roadmap-pinned .roadmap-camera {
+  transform: scale(calc(1 + var(--roadmap-zoom) * var(--camera-focus, 0)));
+  transform-origin: var(--camera-anchor, 50%) var(--camera-ruler, 55%);
+}
+.motion-on .roadmap-pinned .roadmap-week {
+  transform: translateY(calc(var(--week-focus, 0) * -2px)) scale(calc(1 + var(--week-focus, 0) * var(--roadmap-week-zoom)));
+}
+.motion-on .roadmap-pinned .ruler-line {
+  background-color: color-mix(in srgb, var(--rule) 24%, var(--paper));
+}
+.motion-on .roadmap-pinned .roadmap-heading { opacity: var(--roadmap-heading-clarity, 1); }
+.roadmap-week:first-child { transform-origin: left center; }
+.roadmap-week:last-child { transform-origin: right center; }
+.motion-on .roadmap-pinned .phase-copy {
+  opacity: var(--phase-clarity, 1);
+  transform: translateY(var(--phase-lift, 0px)) scale(var(--phase-scale, 1));
+  transform-origin: top left;
+}
+
+@media (max-width: 43.99rem) {
+  .roadmap { --roadmap-zoom: .028; --roadmap-week-zoom: .14; }
+  .motion-on .roadmap-pinned::after { height: 110svh; }
+  .motion-on .roadmap-camera .roadmap-heading { gap: .9rem; margin-bottom: 1.25rem; }
+  .motion-on .roadmap-camera .phases li { padding-block: .72rem; }
+  .motion-on .roadmap-camera .phase-copy { gap: .32rem; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html:not(.lenis) { scroll-behavior: smooth; }
 }
