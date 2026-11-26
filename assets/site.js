@@ -40,10 +40,14 @@
   const unwrap = document.querySelector(".unwrap-button");
   const roadmap = document.querySelector(".roadmap");
   const roadmapStage = roadmap.querySelector(".roadmap-stage");
+  const roadmapWindow = roadmap.querySelector(".roadmap-window");
+  const roadmapTrack = roadmap.querySelector(".roadmap-track");
   const roadmapOverview = roadmap.querySelector(".roadmap-overview");
   const roadmapPreview = roadmap.querySelector(".roadmap-preview");
   const roadmapSheets = [...roadmap.querySelectorAll(".roadmap-sheet-inner")];
-  const roadmapIndex = roadmap.querySelector(".roadmap-index-current");
+  const roadmapIndex = roadmap.querySelector(".roadmap-index");
+  const roadmapCurrent = roadmapIndex.querySelector(".roadmap-index-current");
+  const roadmapFill = roadmapIndex.querySelector(".roadmap-index-fill");
   const bookArt = [...document.querySelectorAll(".book-art")];
   const coaching = document.querySelector(".coaching");
   const coachPrint = coaching.querySelector(".coach-print");
@@ -93,11 +97,16 @@
   let paperIsOpen = true;
   let roadmapGeometry;
   let lastRoadmapProgress = null;
+  let lastRoadmapOpening = null;
+  let lastRoadmapPosition = null;
   let lastRoadmapWeek = 1;
 
   function resetRoadmap() {
     roadmap.classList.remove("roadmap-pinned");
     roadmap.removeAttribute("style");
+    for (const layer of [roadmapWindow, roadmapTrack, roadmapIndex, roadmapFill]) {
+      layer.removeAttribute("style");
+    }
     roadmapGeometry = undefined;
     lastRoadmapProgress = null;
   }
@@ -111,7 +120,7 @@
     }
 
     roadmap.classList.add("roadmap-pinned");
-    const width = roadmapStage.clientWidth;
+    const width = roadmapStage.getBoundingClientRect().width;
     const height = roadmapStage.clientHeight;
     roadmap.style.setProperty("--roadmap-aspect", width / height);
 
@@ -134,10 +143,12 @@
     const preview = roadmapPreview.getBoundingClientRect();
     const scale = Math.min(preview.width / width, preview.height / height);
     const introDistance = height * .68;
-    const travelDistance = height * .52 * (roadmapSheets.length - 1);
+    const travelDistance = height * .62 * (roadmapSheets.length - 1);
     const distance = introDistance + travelDistance + height * .4;
 
     roadmapGeometry = {
+      distance,
+      width,
       scale,
       x: preview.left - stage.left + (preview.width - width * scale) / 2,
       y: preview.top - stage.top + (preview.height - height * scale) / 2,
@@ -148,38 +159,68 @@
       "--roadmap-ready": "visible",
       "--roadmap-runway": `${distance}px`,
     });
-    lastRoadmapProgress = null;
-    const position = pinnedProgress(roadmap.getBoundingClientRect(), roadmapStage.getBoundingClientRect());
-    renderRoadmap(position ?? 0);
+    lastRoadmapProgress = lastRoadmapOpening = lastRoadmapPosition = null;
+    refreshRoadmapStart();
     scheduleScene();
+  }
+
+  function refreshRoadmapStart() {
+    if (!roadmapGeometry) return;
+
+    roadmapGeometry.start = roadmap.getBoundingClientRect().top + window.scrollY;
+    updateRoadmap(lenis?.scroll ?? window.scrollY);
+  }
+
+  // Course details and font changes can move the section without a window resize.
+  const roadmapLayoutObserver = new ResizeObserver(refreshRoadmapStart);
+
+  function updateRoadmap(scrollPosition) {
+    if (!roadmapGeometry) return false;
+
+    const { start, distance } = roadmapGeometry;
+    const offset = scrollPosition - start;
+    renderRoadmap(clamp(offset / distance));
+    return offset >= 0 && offset < distance;
+  }
+
+  function easeRailEdge(distance, edgeSize) {
+    const t = distance / edgeSize;
+    return distance * t * (2 - t);
   }
 
   function renderRoadmap(progress) {
     if (progress === lastRoadmapProgress) return;
     lastRoadmapProgress = progress;
 
-    const { scale, x, y, zoomEnd, travelEnd } = roadmapGeometry;
+    const { width, scale, x, y, zoomEnd, travelEnd } = roadmapGeometry;
     const opening = smoothstep(segment(progress, .012, zoomEnd));
-    const travel = segment(progress, zoomEnd, travelEnd);
-    const rawWeek = travel * (roadmapSheets.length - 1);
-    const previousWeek = Math.floor(rawWeek);
-    const offset = rawWeek - previousWeek;
-    // Ease past the edges of each sheet while keeping one continuous rail.
-    const position = previousWeek + .6 * offset + .4 * smoothstep(offset);
-    const currentWeek = Math.round(position) + 1;
+    if (opening !== lastRoadmapOpening) {
+      lastRoadmapOpening = opening;
+      const closed = 1 - opening;
+      roadmapWindow.style.transform = `translate3d(${x * closed}px, ${y * closed}px, 0) scale(${scale + (1 - scale) * opening})`;
+      roadmapWindow.style.boxShadow = `0 0 0 1px rgb(21 22 19 / ${.45 * closed})`;
+      roadmapIndex.style.opacity = smoothstep(segment(opening, .86, 1));
+    }
 
-    setProperties(roadmap, {
-      "--roadmap-x": `${x * (1 - opening)}px`,
-      "--roadmap-y": `${y * (1 - opening)}px`,
-      "--roadmap-scale": scale + (1 - scale) * opening,
-      "--preview-outline": .45 * (1 - opening),
-      "--roadmap-travel": `${-100 * position}%`,
-      "--roadmap-fill": (position + 1) / roadmapSheets.length,
-      "--roadmap-index-opacity": smoothstep(segment(opening, .86, 1)),
-    });
+    const lastSheet = roadmapSheets.length - 1;
+    let position = segment(progress, zoomEnd, travelEnd) * lastSheet;
+    // Ease only where the rail starts and ends. Cross the week boundaries at a constant rate.
+    const edgeSize = .2;
+    if (position < edgeSize) {
+      position = easeRailEdge(position, edgeSize);
+    } else if (position > lastSheet - edgeSize) {
+      position = lastSheet - easeRailEdge(lastSheet - position, edgeSize);
+    }
+
+    if (position === lastRoadmapPosition) return;
+    lastRoadmapPosition = position;
+    roadmapTrack.style.transform = `translate3d(${-width * position}px, 0, 0)`;
+    roadmapFill.style.transform = `scaleX(${(position + 1) / roadmapSheets.length})`;
+
+    const currentWeek = Math.round(position) + 1;
     if (currentWeek !== lastRoadmapWeek) {
       lastRoadmapWeek = currentWeek;
-      roadmapIndex.textContent = String(currentWeek).padStart(2, "0");
+      roadmapCurrent.textContent = String(currentWeek).padStart(2, "0");
     }
   }
 
@@ -223,6 +264,12 @@
 
   function renderScene(time) {
     frame = 0;
+    // Keep off-screen scenes out of the frame budget while the rail fills the viewport.
+    if (updateRoadmap(lenis?.scroll ?? window.scrollY)) {
+      paperAnimation = null;
+      paperOverride = null;
+      return;
+    }
     const height = window.innerHeight;
     const heroBox = hero.getBoundingClientRect();
     const reelBox = reel.getBoundingClientRect();
@@ -230,9 +277,6 @@
     const manualBox = manualRunway.getBoundingClientRect();
     const introBox = manualIntro.getBoundingClientRect();
     const journalBox = journal.getBoundingClientRect();
-    const roadmapProgress = roadmapGeometry
-      ? pinnedProgress(roadmap.getBoundingClientRect(), roadmapStage.getBoundingClientRect())
-      : null;
     const coachTop = coaching.getBoundingClientRect().top;
     const coverProgress = bookArt.map((art) => {
       const box = art.getBoundingClientRect();
@@ -269,7 +313,6 @@
     else if (reel.hasAttribute("style")) reel.removeAttribute("style");
     renderPaper(paperProgress);
     heroMedia.style.setProperty("--hero-drift", `${afterHero * 78}px`);
-    if (roadmapProgress !== null) renderRoadmap(roadmapProgress);
     bookArt.forEach((art, index) => {
       const progress = coverProgress[index];
       setProperties(art, {
@@ -303,6 +346,7 @@
         stopInertiaOnNavigate: true,
         lerp: .084,
       });
+      lenis.on("scroll", ({ scroll }) => updateRoadmap(scroll));
     }
   }
 
@@ -317,6 +361,7 @@
       scheduleScene();
       window.addEventListener("scroll", scheduleScene, { passive: true });
       measureRoadmap();
+      roadmapLayoutObserver.observe(document.body);
       window.addEventListener("resize", measureRoadmap);
     } else {
       cancelAnimationFrame(frame);
@@ -325,6 +370,7 @@
       paperAnimation = null;
       window.removeEventListener("scroll", scheduleScene);
       window.removeEventListener("resize", measureRoadmap);
+      roadmapLayoutObserver.disconnect();
       resetRoadmap();
       hero.classList.remove("hero-enter");
       reel.removeAttribute("style");

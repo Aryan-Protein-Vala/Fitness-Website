@@ -389,8 +389,6 @@
   overflow: clip;
   visibility: var(--roadmap-ready, hidden);
   transform-origin: top left;
-  transform: translate3d(var(--roadmap-x, 0px), var(--roadmap-y, 0px), 0) scale(var(--roadmap-scale, 1));
-  box-shadow: 0 0 0 1px rgb(21 22 19 / var(--preview-outline, 0));
 }
 .roadmap-pinned .roadmap-track {
   display: flex;
@@ -399,9 +397,12 @@
   max-width: none;
   gap: 0;
   padding: 0;
-  transform: translate3d(var(--roadmap-travel, 0%), 0, 0);
+  will-change: transform;
 }
-.roadmap-pinned .roadmap-sheet { flex: 0 0 100%; }
+.roadmap-pinned .roadmap-sheet {
+  flex: 0 0 100%;
+  contain: paint;
+}
 .roadmap-pinned .roadmap-sheet-inner {
   height: 100%;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -433,22 +434,22 @@
   font-size: .75rem;
   font-weight: 750;
   font-variant-numeric: tabular-nums;
-  opacity: var(--roadmap-index-opacity, 0);
+  opacity: 0;
   pointer-events: none;
 }
+.roadmap-index-current { min-width: 2ch; }
 .roadmap-index-line {
   position: relative;
   flex: 1;
   height: .4rem;
   background: var(--rule);
 }
-.roadmap-index-line::before {
+.roadmap-index-fill {
   position: absolute;
   inset: 0;
   background: var(--ink);
-  transform: scaleX(var(--roadmap-fill, 0));
+  transform: scaleX(0);
   transform-origin: left;
-  content: "";
 }
 .roadmap-index-line::after {
   position: absolute;
