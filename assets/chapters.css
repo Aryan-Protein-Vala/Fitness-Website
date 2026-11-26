@@ -153,3 +153,54 @@
 @media (prefers-reduced-motion: no-preference) {
   html:not(.lenis) { scroll-behavior: smooth; }
 }
+
+.lift-log {
+  position: absolute;
+  inset: 46.5% auto auto 67.6%;
+  width: min(80vw, 42rem);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px rgb(21 22 19 / 18%);
+  padding: clamp(.85rem, 3.2vw, 2rem);
+  background: #f7f5eb;
+}
+.lift-log-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .35rem .75rem;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: .55rem;
+  font-size: .75rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .045em;
+}
+.lift-log-header span:last-child {
+  padding: .2rem .42rem;
+  background: var(--acid);
+}
+.lift-log-title {
+  margin: .5rem 0 .7rem;
+  font: 900 clamp(2.4rem, 8.1vw, 5.8rem)/.92 var(--display);
+  letter-spacing: -.023em;
+}
+.lift-log-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+.lift-log-table tr { border-top: 1px solid var(--rule); }
+.lift-log-table tbody tr:last-child { border-bottom: 1px solid var(--rule); }
+.lift-log-table th {
+  padding: .35rem 0;
+  font-size: .76rem;
+  line-height: 1.2;
+}
+.lift-log-table :is(th, td):last-child { text-align: right; }
+.lift-log-table td {
+  padding: .22em 0;
+  font: 750 clamp(1.18rem, 3.8vw, 2.3rem)/1 var(--display);
+}

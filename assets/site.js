@@ -256,10 +256,84 @@
     lenis.scrollTo(target, { duration: .96, easing: easeOut });
   });
 
+  function setupFooterLens() {
+    const title = document.querySelector(".footer-title");
+    const lens = title.querySelector(".footer-lens");
+    const preference = matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) and (forced-colors: none)");
+    const current = { x: 0, y: 0, radius: 0 };
+    const target = { x: 0, y: 0, radius: 0 };
+    let animation = 0;
+    let lastTime = 0;
+
+    function clearLens() {
+      cancelAnimationFrame(animation);
+      animation = 0;
+      lastTime = 0;
+      current.radius = target.radius = 0;
+      lens.hidden = true;
+    }
+
+    function paint(time) {
+      const elapsed = lastTime ? Math.min(50, time - lastTime) : 16;
+      const follow = 1 - Math.exp(-elapsed / 39);
+      lastTime = time;
+
+      current.x += (target.x - current.x) * follow;
+      current.y += (target.y - current.y) * follow;
+      current.radius += (target.radius - current.radius) * follow;
+
+      setProperties(lens, {
+        "--lens-x": `${current.x}px`,
+        "--lens-y": `${current.y}px`,
+        "--lens-r": `${current.radius}px`,
+      });
+
+      const settled = Math.hypot(target.x - current.x, target.y - current.y, target.radius - current.radius) < .35;
+      if (!settled) {
+        animation = requestAnimationFrame(paint);
+        return;
+      }
+
+      animation = 0;
+      lastTime = 0;
+      if (!target.radius) clearLens();
+    }
+
+    function followPointer(event) {
+      if (!preference.matches || event.pointerType !== "mouse") return;
+
+      const entering = lens.hidden;
+      lens.hidden = false;
+      const bounds = lens.getBoundingClientRect();
+      target.x = event.clientX - bounds.left;
+      target.y = event.clientY - bounds.top;
+      target.radius = Math.min(118, Math.max(66, title.clientWidth * .12));
+      if (entering) {
+        current.x = target.x;
+        current.y = target.y;
+      }
+      if (!animation) animation = requestAnimationFrame(paint);
+    }
+
+    function leave() {
+      if (lens.hidden) return;
+      target.radius = 0;
+      if (!animation) animation = requestAnimationFrame(paint);
+    }
+
+    title.addEventListener("pointerenter", followPointer);
+    title.addEventListener("pointermove", followPointer);
+    title.addEventListener("pointerleave", leave);
+    title.addEventListener("pointercancel", clearLens);
+    window.addEventListener("blur", clearLens);
+    preference.addEventListener("change", clearLens);
+  }
+
   unwrap.addEventListener("click", flipPaper);
   motionPreference.addEventListener("change", syncMotion);
   wheelInput.addEventListener("change", syncWheel);
   syncMotion();
+  setupFooterLens();
 
   if (motionPreference.matches && window.scrollY < 80) {
     hero.classList.add("hero-enter");

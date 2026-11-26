@@ -607,7 +607,7 @@ summary:hover { color: #54582a; }
 .faq-list summary { min-height: 3.65rem; }
 .faq-list details p { padding: .15rem 1.65rem 1.05rem 0; color: var(--muted); max-width: 58ch; }
 
-.site-footer { background: var(--ink); color: var(--paper); padding: 1.5rem 0 .45rem; }
+.site-footer { background: var(--ink); color: var(--paper); padding: 1.5rem 0 .45rem; overflow: clip; }
 .footer-top { display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; justify-content: space-between; border-bottom: 1px solid var(--rule-dark); }
 .footer-top nav { display: flex; gap: 0 clamp(.63rem, 2.3vw, 1.7rem); flex-wrap: wrap; }
 .footer-top a {
@@ -731,4 +731,36 @@ html.lenis, html.lenis body { height: auto; }
   .program-copy > p { min-height: 4.6em; }
   .program-buy { flex-direction: column; align-items: stretch; }
   .program-buy .action { width: 100%; }
+}
+
+.footer-title {
+  position: relative;
+  isolation: isolate;
+}
+.footer-lens {
+  position: absolute;
+  inset: -2.5rem calc(-1 * var(--gutter)) -7.5rem;
+  padding: 2.5rem var(--gutter) .45rem;
+  background:
+    radial-gradient(circle at var(--lens-x, 50%) var(--lens-y, 50%), transparent calc(var(--lens-r, 0px) - 9px), rgb(21 22 19 / 24%) calc(var(--lens-r, 0px) - 8px), transparent calc(var(--lens-r, 0px) - 7px)),
+    var(--acid);
+  pointer-events: none;
+  clip-path: circle(var(--lens-r, 0px) at var(--lens-x, 50%) var(--lens-y, 50%));
+}
+.footer-lens .footer-wordmark { color: var(--ink); }
+
+@media (hover: hover) and (pointer: fine) and (forced-colors: none) {
+  .site-footer { padding-bottom: 1.85rem; }
+  html {
+    cursor: url("imagery/cursor-ink.png") 4 4, auto;
+    cursor: image-set(url("imagery/cursor-ink.png") 1x, url("imagery/cursor-ink-2x.png") 2x) 4 4, auto;
+  }
+  html :is(a[href], button, summary):not(:disabled) {
+    cursor: url("imagery/cursor-acid.png") 4 4, pointer;
+    cursor: image-set(url("imagery/cursor-acid.png") 1x, url("imagery/cursor-acid-2x.png") 2x) 4 4, pointer;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (forced-colors: active) {
+  .footer-lens { display: none; }
 }
