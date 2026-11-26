@@ -323,7 +323,6 @@ h3 { font-size: clamp(2.25rem, 5vw, 3rem); }
   object-fit: cover;
   transition: scale var(--settle) var(--ease);
 }
-.program:hover .book-art img { scale: 1.025; }
 .program-copy {
   padding-top: .95rem;
 }
@@ -722,7 +721,7 @@ html.lenis, html.lenis body { height: auto; }
     animation-duration: .01ms !important;
     transition-duration: .01ms !important;
   }
-  .hero-media img, .program:hover .book-art img { transform: none; scale: 1; }
+  .hero-media img { transform: none; scale: 1; }
   .wrapping { display: none !important; }
   .ruler-line::before { transform: none; }
 }

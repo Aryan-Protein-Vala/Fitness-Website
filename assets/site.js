@@ -1,33 +1,10 @@
 (() => {
   "use strict";
 
-  // Add the live payment URLs when the four checkout pages are ready.
-  const checkoutLinks = {
-    fatloss: "",
-    recomp: "",
-    gain: "",
-    bundle: "",
-  };
-
-  const purchaseActions = [...document.querySelectorAll("[data-buy]")];
-  const liveCheckouts = purchaseActions.filter((action) => {
-    const url = checkoutLinks[action.dataset.buy];
-    if (!url) return false;
-
-    action.href = url;
-    action.textContent = action.dataset.checkoutLabel;
-    return true;
-  });
-
-  if (liveCheckouts.length) {
-    const allLive = liveCheckouts.length === purchaseActions.length;
-
-    document.querySelector("[data-purchase-note]").textContent = allLive
-      ? "One-time payment. Guide covers are illustrations of the digital products."
-      : "You can ask Aryan on WhatsApp about any guide without an online checkout link. Guide covers are illustrations of the digital products.";
-    document.querySelector("[data-delivery-note]").textContent = allLive
-      ? "Follow the delivery instructions at checkout. If you need help getting your PDF, message Aryan on WhatsApp."
-      : "Follow the delivery instructions at checkout. For guides sold through WhatsApp, Aryan can help with payment and delivery.";
+  if (location.protocol === "file:") {
+    document.querySelectorAll(".buy-action").forEach((action) => {
+      action.href = new URL(action.getAttribute("href"), "https://fitness-website-zeta-red.vercel.app/");
+    });
   }
 
   const menu = document.querySelector(".site-menu");
@@ -75,6 +52,32 @@
       element.style.setProperty(property, value);
     }
   }
+
+  const coverHover = matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+
+  function resetCover(art) {
+    for (const property of ["--book-pitch", "--book-yaw", "--book-light-x", "--book-light-y"]) {
+      art.style.removeProperty(property);
+    }
+  }
+
+  for (const art of bookArt) {
+    art.addEventListener("pointermove", (event) => {
+      if (!coverHover.matches || event.pointerType !== "mouse") return;
+
+      const bounds = art.getBoundingClientRect();
+      const x = clamp((event.clientX - bounds.left) / bounds.width);
+      const y = clamp((event.clientY - bounds.top) / bounds.height);
+      setProperties(art, {
+        "--book-pitch": `${(0.5 - y) * 17}deg`,
+        "--book-yaw": `${(x - 0.5) * 21}deg`,
+        "--book-light-x": `${x * 100}%`,
+        "--book-light-y": `${y * 100}%`,
+      });
+    });
+    art.addEventListener("pointerleave", () => resetCover(art));
+  }
+  coverHover.addEventListener("change", () => bookArt.forEach(resetCover));
 
   let lenis;
   let frame = 0;
