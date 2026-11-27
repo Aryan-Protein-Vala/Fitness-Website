@@ -1,59 +1,19 @@
-const { createHmac, randomBytes, timingSafeEqual } = require("node:crypto");
+const { randomBytes } = require("node:crypto");
+const { programs, currency, orderPattern, paymentPattern, credentials, digest, matchesDigest, razorpay, json, sameOriginJson } = require("../server/commerce");
+const guideStore = require("../server/guide-store");
 
-const programs = new Map([
-  ["fat-loss", { label: "Fat Loss", amount: 64900 }],
-  ["body-recomp", { label: "Body Recomp", amount: 64900 }],
-  ["muscle-gain", { label: "Muscle Gain", amount: 64900 }],
-  ["bundle", { label: "The Complete Set", amount: 129900 }],
-]);
 const support = "https://wa.me/message/FXVMZMLJMCZ5E1";
-const currency = "INR";
-const orderPattern = /^order_[A-Za-z0-9]{1,64}$/;
-const paymentPattern = /^pay_[A-Za-z0-9]{1,64}$/;
-
-function credentials() {
-  const key = process.env.RAZORPAY_KEY_ID?.trim();
-  const secret = process.env.RAZORPAY_KEY_SECRET?.trim();
-  return key && secret ? { key, secret } : null;
-}
-
-function digest(secret, message) {
-  return createHmac("sha256", secret).update(message).digest("hex");
-}
-
-function matchesDigest(expected, received) {
-  return typeof received === "string" && /^[a-f0-9]{64}$/i.test(received)
-    && timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(received, "hex"));
-}
 
 // Bind the server-created order to the selected product without storing a client-provided order ID.
 function orderProof(secret, orderId, slug) {
   return digest(secret, `aryan-pandit:checkout:${orderId}:${slug}`);
 }
 
-async function razorpay(auth, path, body) {
-  const headers = {
-    Authorization: `Basic ${Buffer.from(`${auth.key}:${auth.secret}`).toString("base64")}`,
-  };
-  if (body) headers["Content-Type"] = "application/json";
-  const response = await fetch(`https://api.razorpay.com/v1/${path}`, {
-    method: body ? "POST" : "GET",
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    redirect: "error",
-    signal: AbortSignal.timeout(9000),
-  });
-  if (!response.ok) throw new Error(`Razorpay API returned ${response.status}`);
-  return response.json();
-}
+async function createOrder(request, response, auth, program, slug) {
+  const library = Boolean(guideStore.settings());
+  const email = guideStore.emailAddress(request.body?.email);
+  if (library && !email) return json(response, 400, { error: "email_required" });
 
-function json(response, code, data) {
-  response.statusCode = code;
-  response.setHeader("Content-Type", "application/json; charset=utf-8");
-  response.end(JSON.stringify(data));
-}
-
-async function createOrder(response, auth, program, slug) {
   const order = await razorpay(auth, "orders", {
     amount: program.amount,
     currency,
@@ -65,6 +25,8 @@ async function createOrder(response, auth, program, slug) {
       || order.amount !== program.amount || order.currency !== currency) {
     throw new Error("Unexpected Razorpay order");
   }
+
+  if (library) await guideStore.saveOrder(request, response, order, slug, email);
 
   return json(response, 201, {
     key: auth.key,
@@ -97,7 +59,13 @@ async function verifyPayment(response, auth, program, slug, body) {
   else if (payment.status === "failed") status = "failed";
   else if (payment.status === "captured" && payment.captured === true) status = "captured";
 
-  return json(response, 200, { status, paymentId: payment.id, label: program.label });
+  const order = guideStore.settings() ? await guideStore.recordPayment(orderId, payment) : null;
+  return json(response, 200, {
+    status,
+    paymentId: payment.id,
+    label: program.label,
+    library: order?.status === "captured",
+  });
 }
 
 function checkoutPage(program, slug, configured) {
@@ -113,6 +81,7 @@ function checkoutPage(program, slug, configured) {
   <link rel="icon" href="/assets/imagery/favicon.png">
   <link rel="stylesheet" href="/assets/site.css">
   <link rel="stylesheet" href="/assets/chapters.css">
+  <link rel="stylesheet" href="/assets/guides.css">
   ${configured ? '<script defer src="/assets/checkout.js"></script>' : ""}
 </head>
 <body class="checkout-page">
@@ -156,19 +125,14 @@ module.exports = async function checkout(request, response) {
     return response.end(method === "HEAD" ? undefined : checkoutPage(program, slug, Boolean(auth)));
   }
 
-  const { origin, host } = request.headers;
-  if (request.headers["sec-fetch-site"] === "cross-site" || (origin && URL.parse(origin)?.host !== host)) {
-    return json(response, 403, { error: "invalid_origin" });
-  }
-  if (!/^application\/json(?:;|$)/i.test(request.headers["content-type"] || "")) {
-    return json(response, 415, { error: "unsupported_content_type" });
-  }
+  const invalid = sameOriginJson(request);
+  if (invalid) return json(response, invalid, { error: "invalid_request" });
   if (!auth) return json(response, 503, { error: "checkout_unavailable" });
 
   const actions = query.getAll("action");
   const action = actions.length === 1 ? actions[0] : null;
   try {
-    if (action === "create") return await createOrder(response, auth, program, slug);
+    if (action === "create") return await createOrder(request, response, auth, program, slug);
     if (action === "verify") {
       const body = request.body;
       if (!body || typeof body !== "object" || Array.isArray(body)) {

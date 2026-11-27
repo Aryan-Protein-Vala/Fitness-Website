@@ -26,6 +26,8 @@
   <link rel="icon" type="image/png" href="assets/imagery/favicon.png">
   <link rel="stylesheet" href="assets/site.css">
   <link rel="stylesheet" href="assets/chapters.css">
+  <link rel="stylesheet" href="assets/guides.css">
+  <script defer src="assets/plan-finder.js"></script>
   <script defer src="assets/vendor/lenis.min.js"></script>
   <script defer src="assets/site.js"></script>
   <script defer src="assets/checkout.js"></script>
@@ -114,6 +116,7 @@
         <a href="#inside">Inside the guides</a>
         <a href="#coaching">Coaching</a>
         <a href="#faq">Questions</a>
+        <a href="/my-guides">My guides</a>
       </nav>
       <a class="action header-action" href="#programs">Explore programs</a>
       <details class="site-menu">
@@ -123,6 +126,7 @@
           <a href="#inside">Inside the guides</a>
           <a href="#coaching">Coaching</a>
           <a href="#faq">Questions</a>
+          <a href="/my-guides">My guides</a>
         </nav>
       </details>
     </div>
@@ -197,6 +201,37 @@
           <h2 id="programs-title">PICK YOUR<br>PROGRAM.</h2>
           <p>All three 12-week gym guides include three- to six-day training splits, Indian meal plans and a workout journal. Pick the goal you want to work on first.</p>
         </header>
+        <section class="plan-finder" aria-labelledby="finder-title" hidden>
+          <div class="finder-intro">
+            <p class="finder-kicker">Not sure where to start?</p>
+            <h3 id="finder-title">FIND MY PLAN.</h3>
+          </div>
+          <div class="finder-work">
+            <fieldset class="finder-step" data-finder="goal">
+              <legend>What’s your main goal?</legend>
+              <div class="finder-options">
+                <button type="button" data-plan="fat-loss">Get leaner</button>
+                <button type="button" data-plan="muscle-gain">Build muscle</button>
+                <button type="button" data-plan="both">A bit of both</button>
+              </div>
+            </fieldset>
+            <fieldset class="finder-step" data-finder="priority" hidden>
+              <legend>Which would you put first?</legend>
+              <div class="finder-options">
+                <button type="button" data-plan="fat-loss">Losing fat</button>
+                <button type="button" data-plan="muscle-gain">Adding size</button>
+                <button type="button" data-plan="body-recomp">Both equally</button>
+              </div>
+            </fieldset>
+            <div class="finder-result" hidden>
+              <p class="finder-kicker">Your starting plan</p>
+              <h4 tabindex="-1"></h4>
+              <p class="finder-reason"></p>
+              <a class="action action-ink finder-link" href="#programs">See the plan <span aria-hidden="true">↘</span></a>
+            </div>
+            <button class="finder-reset" type="button" hidden>Start over</button>
+          </div>
+        </section>
         <div class="program-grid">
           <article class="program" id="fat-loss" aria-labelledby="fatloss-title">
             <div class="book-art">
@@ -555,6 +590,7 @@
         <nav aria-label="Footer navigation">
           <a href="#programs">Programs</a>
           <a href="#inside">The guides</a>
+          <a href="/my-guides">My guides</a>
           <a href="#coaching">Coaching</a>
           <a href="https://www.instagram.com/aryanpandit_85/">Instagram</a>
         </nav>

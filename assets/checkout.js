@@ -14,8 +14,13 @@
     <h2 id="checkout-status-title"></h2>
     <p class="checkout-dialog-message" role="status"></p>
     <p class="checkout-reference" hidden></p>
+    <form class="checkout-email" hidden>
+      <label>Email <input type="email" name="email" autocomplete="email" maxlength="254" required></label>
+      <button class="action action-acid" type="submit">Continue to Razorpay</button>
+    </form>
     <div class="checkout-actions">
       <button class="action action-acid checkout-retry" type="button" hidden>Check payment again</button>
+      <a class="action action-acid checkout-library" href="/my-guides" hidden>Open my guides</a>
       <a class="action action-outline" href="https://wa.me/message/FXVMZMLJMCZ5E1">Message Aryan</a>
     </div>`;
   document.body.append(dialog);
@@ -24,11 +29,15 @@
   const message = dialog.querySelector(".checkout-dialog-message");
   const reference = dialog.querySelector(".checkout-reference");
   const retry = dialog.querySelector(".checkout-retry");
+  const emailForm = dialog.querySelector(".checkout-email");
+  const emailInput = emailForm.elements.email;
+  const library = dialog.querySelector(".checkout-library");
   let sdk;
   let activeAttempt;
   let lastAction;
   let verifying = false;
   let pending = null;
+  let emailSelection;
 
   try {
     const saved = JSON.parse(sessionStorage.getItem(storageKey));
@@ -47,13 +56,16 @@
     }
   }
 
-  function showStatus(heading, copy, { paymentId, check = false, open = true } = {}) {
+  function showStatus(heading, copy, { paymentId, check = false, open = true, hasLibrary = false, askEmail = false } = {}) {
     title.textContent = heading;
     message.textContent = copy;
     reference.hidden = !paymentId;
     reference.textContent = paymentId ? `Payment reference: ${paymentId}` : "";
     retry.hidden = !check;
+    library.hidden = !hasLibrary;
+    emailForm.hidden = !askEmail;
     if (open && !dialog.open) dialog.showModal();
+    if (askEmail) emailInput.focus();
   }
 
   async function request(slug, action, body = {}) {
@@ -113,7 +125,10 @@
       const result = await request(slug, "verify", body);
       if (result.status === "captured") {
         remember(null);
-        showStatus("Payment confirmed", `Payment for ${result.label} is confirmed. Share your payment reference with Aryan on WhatsApp for PDF delivery.`, { paymentId: result.paymentId, open: false });
+        const copy = result.library
+          ? "Your sample reader is unlocked. Share your payment reference with Aryan on WhatsApp for the complete PDF."
+          : `Payment for ${result.label} is confirmed. Share your payment reference with Aryan on WhatsApp for PDF delivery.`;
+        showStatus("Payment confirmed", copy, { paymentId: result.paymentId, open: false, hasLibrary: result.library });
       } else if (result.status === "refunded" || result.status === "failed") {
         remember(null);
         const copy = result.status === "refunded"
@@ -130,7 +145,7 @@
     }
   }
 
-  async function openCheckout(action, slug) {
+  async function openCheckout(action, slug, email) {
     if (activeAttempt || verifying) return;
 
     lastAction = action;
@@ -141,7 +156,7 @@
     action.setAttribute("aria-busy", "true");
 
     try {
-      const order = await request(slug, "create");
+      const order = await request(slug, "create", email ? { email } : undefined);
       const Razorpay = await loadRazorpay();
       const checkout = new Razorpay({
         key: order.key,
@@ -152,6 +167,7 @@
         description: order.label,
         image: new URL("/assets/imagery/favicon.png", location.href).href,
         theme: { color: "#151613" },
+        ...(email && { prefill: { email } }),
         modal: { ondismiss: () => release(attempt) },
         handler: ({ razorpay_order_id, razorpay_payment_id, razorpay_signature }) => {
           if (attempt.completed) return;
@@ -173,6 +189,11 @@
       checkout.open();
     } catch (error) {
       release(attempt);
+      if (error.message === "email_required") {
+        emailSelection = { action, slug };
+        showStatus("Your email", "Use this email to identify your guide library. The online reader currently has sample pages. Aryan sends your complete PDF on WhatsApp.", { askEmail: true });
+        return;
+      }
       const copy = error.message === "checkout_unavailable"
         ? "Online checkout is being set up. Message Aryan on WhatsApp to arrange your purchase."
         : "Razorpay checkout couldn’t open. Try Buy now again or message Aryan on WhatsApp.";
@@ -181,6 +202,14 @@
   }
 
   retry.addEventListener("click", checkPayment);
+  emailForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!emailSelection) return;
+    const { action, slug } = emailSelection;
+    emailSelection = null;
+    dialog.close();
+    void openCheckout(action, slug, emailInput.value.trim());
+  });
   dialog.addEventListener("close", () => lastAction?.focus({ preventScroll: true }));
 
   for (const action of document.querySelectorAll(".buy-action")) {
