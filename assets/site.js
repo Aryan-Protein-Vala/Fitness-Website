@@ -45,6 +45,7 @@
   const roadmapOverview = roadmap.querySelector(".roadmap-overview");
   const roadmapPreview = roadmap.querySelector(".roadmap-preview");
   const roadmapSheets = [...roadmap.querySelectorAll(".roadmap-sheet-inner")];
+  const roadmapNotes = [...roadmap.querySelectorAll(".roadmap-week-note")];
   const roadmapIndex = roadmap.querySelector(".roadmap-index");
   const roadmapCurrent = roadmapIndex.querySelector(".roadmap-index-current");
   const roadmapFill = roadmapIndex.querySelector(".roadmap-index-fill");
@@ -129,6 +130,11 @@
     const width = roadmapStage.getBoundingClientRect().width;
     const height = roadmapStage.clientHeight;
     roadmap.style.setProperty("--roadmap-aspect", width / height);
+
+    // Give each week's caption the same space so the divider stays level across the rail.
+    roadmap.style.removeProperty("--roadmap-note-height");
+    const noteHeight = Math.ceil(Math.max(...roadmapNotes.map((note) => parseFloat(getComputedStyle(note).height))));
+    roadmap.style.setProperty("--roadmap-note-height", `${noteHeight}px`);
 
     // Leave every week in normal document flow if zoom or a short viewport
     // would make its number and notes overlap inside the pinned scene.

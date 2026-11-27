@@ -16,7 +16,7 @@
     <p class="checkout-reference" hidden></p>
     <form class="checkout-email" hidden>
       <label>Email <input type="email" name="email" autocomplete="email" maxlength="254" required></label>
-      <button class="action action-acid" type="submit">Continue to Razorpay</button>
+      <button class="action action-acid" type="submit">Continue to pay</button>
     </form>
     <div class="checkout-actions">
       <button class="action action-acid checkout-retry" type="button" hidden>Check payment again</button>

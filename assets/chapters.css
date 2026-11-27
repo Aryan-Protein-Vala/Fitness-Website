@@ -416,6 +416,10 @@
   font-size: clamp(7rem, min(61vw, 52svh), 29rem);
   letter-spacing: -.041em;
 }
+.roadmap-pinned .roadmap-week-note {
+  min-height: var(--roadmap-note-height, 0px);
+  align-content: start;
+}
 .roadmap-pinned .roadmap-week-note h3 { font-size: clamp(2rem, 4.9vw, 4.1rem); }
 .roadmap-pinned .roadmap-index {
   position: absolute;
@@ -473,6 +477,7 @@
 }
 .coach-heading {
   grid-area: heading;
+  container-type: inline-size;
   padding-top: .8rem;
   border-top: 1px solid var(--rule-dark);
   align-self: end;
@@ -483,7 +488,11 @@
   font-size: .875rem;
   font-weight: 700;
 }
-.coach-heading h2 { font-size: clamp(4.1rem, 13vw, 10rem); }
+.coach-heading h2 {
+  font-size: min(13cqi, 7rem);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
 .coach-print {
   grid-area: portrait;
   position: relative;
@@ -574,13 +583,12 @@
 @media (min-width: 44rem) {
   .roadmap-track { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .roadmap-pinned .roadmap-overview { grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); }
-  .roadmap-pinned .roadmap-week-note { grid-template-columns: minmax(0, 1.15fr) minmax(0, .62fr); align-items: end; }
+  .roadmap-pinned .roadmap-week-note { grid-template-columns: minmax(0, 1.15fr) minmax(0, .62fr); align-content: end; align-items: end; }
   .coaching-inner {
     grid-template-columns: minmax(0, 1.55fr) minmax(0, .85fr);
     grid-template-areas: "heading portrait" "copy portrait";
     row-gap: clamp(1.3rem, 4vw, 3.4rem);
   }
-  .coach-heading h2 { font-size: clamp(4.2rem, 9.3vw, 10rem); }
   .coach-print { width: min(100%, 19rem); }
 }
 
