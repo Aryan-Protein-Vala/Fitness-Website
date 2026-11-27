@@ -1,6 +1,7 @@
 (() => {
   const finder = document.querySelector(".plan-finder");
-  if (!finder) return;
+  const trigger = document.querySelector(".finder-trigger");
+  if (!finder?.showModal || !trigger) return;
 
   const goal = finder.querySelector('[data-finder="goal"]');
   const priority = finder.querySelector('[data-finder="priority"]');
@@ -13,6 +14,11 @@
     "body-recomp": ["Body Recomp", "You want to work on losing fat and building muscle in the same training block."],
     "muscle-gain": ["Muscle Gain", "Your priority is adding size. This guide pairs progressive lifting with a controlled calorie surplus."],
   };
+
+  trigger.addEventListener("click", () => {
+    trigger.focus({ preventScroll: true });
+    finder.showModal();
+  });
 
   finder.addEventListener("click", (event) => {
     const choice = event.target.closest("button[data-plan]");
@@ -42,5 +48,10 @@
     goal.querySelector("button").focus();
   });
 
-  finder.hidden = false;
+  link.addEventListener("click", (event) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    finder.close();
+  });
+
+  trigger.hidden = false;
 })();

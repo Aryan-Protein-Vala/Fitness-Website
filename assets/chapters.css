@@ -603,7 +603,7 @@
 
 .buy-action[aria-busy="true"] { opacity: .7; }
 
-.checkout-dialog {
+:is(.checkout-dialog, .plan-finder) {
   position: fixed;
   width: min(32rem, calc(100% - 2rem));
   max-height: calc(100% - 2rem);
@@ -613,14 +613,14 @@
   background: var(--ink);
   color: var(--paper);
 }
-.checkout-dialog::backdrop { background: rgb(16 17 15 / 74%); }
+:is(.checkout-dialog, .plan-finder)::backdrop { background: rgb(16 17 15 / 74%); }
 .checkout-dialog h2 {
   padding-right: 2rem;
   font-size: clamp(2.75rem, 8vw, 4.2rem);
   text-transform: uppercase;
 }
 .checkout-dialog-message { margin-top: 1rem; color: var(--muted-dark); }
-.checkout-close {
+:is(.checkout-close, .finder-close) {
   position: absolute;
   top: .6rem;
   right: .6rem;

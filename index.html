@@ -199,18 +199,23 @@
       <div class="shell">
         <header class="section-heading catalogue-heading">
           <h2 id="programs-title">PICK YOUR<br>PROGRAM.</h2>
-          <p>All three 12-week gym guides include three- to six-day training splits, Indian meal plans and a workout journal. Pick the goal you want to work on first.</p>
-        </header>
-        <section class="plan-finder" aria-labelledby="finder-title" hidden>
-          <div class="finder-intro">
-            <p class="finder-kicker">Not sure where to start?</p>
-            <h3 id="finder-title">FIND MY PLAN.</h3>
+          <div>
+            <p>All three 12-week gym guides include three- to six-day training splits, Indian meal plans and a workout journal. Pick the goal you want to work on first.</p>
+            <button class="action action-ink finder-trigger" type="button" aria-haspopup="dialog" aria-controls="plan-finder" hidden>
+              Confused which one to buy? <span aria-hidden="true">+</span>
+            </button>
           </div>
+        </header>
+        <dialog id="plan-finder" class="plan-finder" aria-labelledby="finder-title" data-lenis-prevent>
+          <form method="dialog">
+            <button class="finder-close" aria-label="Close plan finder">×</button>
+          </form>
+          <h3 id="finder-title">FIND MY PLAN.</h3>
           <div class="finder-work">
             <fieldset class="finder-step" data-finder="goal">
               <legend>What’s your main goal?</legend>
               <div class="finder-options">
-                <button type="button" data-plan="fat-loss">Get leaner</button>
+                <button type="button" data-plan="fat-loss" autofocus>Get leaner</button>
                 <button type="button" data-plan="muscle-gain">Build muscle</button>
                 <button type="button" data-plan="both">A bit of both</button>
               </div>
@@ -227,11 +232,11 @@
               <p class="finder-kicker">Your starting plan</p>
               <h4 tabindex="-1"></h4>
               <p class="finder-reason"></p>
-              <a class="action action-ink finder-link" href="#programs">See the plan <span aria-hidden="true">↘</span></a>
+              <a class="action action-acid finder-link" href="#programs">See the plan <span aria-hidden="true">↘</span></a>
             </div>
             <button class="finder-reset" type="button" hidden>Start over</button>
           </div>
-        </section>
+        </dialog>
         <div class="program-grid">
           <article class="program" id="fat-loss" aria-labelledby="fatloss-title">
             <div class="book-art">

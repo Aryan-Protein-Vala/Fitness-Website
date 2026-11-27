@@ -1,23 +1,24 @@
-.plan-finder {
-  display: grid;
-  gap: 1.25rem 2rem;
-  margin: 0 0 clamp(2rem, 6vw, 5.25rem);
-  color: var(--paper);
-  background: var(--ink);
+.catalogue-heading { align-items: start; }
+.finder-trigger {
+  min-height: 44px;
+  gap: .55rem;
+  margin-top: .75rem;
+  padding-inline: .65rem;
+  text-align: start;
 }
-.finder-intro {
-  padding: clamp(1.25rem, 3vw, 2.25rem);
-  color: var(--ink);
-  background: var(--acid);
+.finder-trigger span {
+  color: var(--acid);
+  font-size: 1.1rem;
+  line-height: 1;
 }
+html:has(.plan-finder[open]) { overflow: hidden; }
+.plan-finder { overscroll-behavior: contain; }
+.plan-finder h3 {
+  padding-right: 2.25rem;
+  font-size: clamp(2.5rem, 7vw, 4.2rem);
+}
+.finder-work { margin-top: 1.35rem; }
 .finder-kicker { font-size: .8125rem; font-weight: 700; }
-.finder-intro h3 { margin-top: .45rem; font-size: clamp(2.9rem, 6.1vw, 6.1rem); }
-.finder-work {
-  display: grid;
-  align-content: center;
-  min-width: 0;
-  padding: 0 1.25rem 1.35rem;
-}
 .finder-step { margin: 0; padding: 0; border: 0; min-width: 0; }
 .finder-step legend { margin-bottom: .65rem; padding: 0; font-weight: 700; }
 .finder-options { display: flex; flex-wrap: wrap; gap: .5rem; }
@@ -47,11 +48,8 @@
 .finder-result .finder-link {
   justify-content: space-between;
   gap: 1rem;
-  color: var(--ink);
-  background: var(--acid);
 }
 .finder-reset {
-  justify-self: start;
   min-height: 44px;
   margin-top: .25rem;
   padding: 0;
@@ -63,10 +61,6 @@
   cursor: pointer;
 }
 
-@media (min-width: 49rem) {
-  .plan-finder { grid-template-columns: minmax(0, .87fr) minmax(0, 1fr); }
-  .finder-work { min-height: 12.5rem; padding: 1.25rem 2rem 1.25rem 0; }
-}
 @media (min-width: 52rem) and (max-width: 61.99rem) {
   .site-nav { gap: 1rem; }
 }
