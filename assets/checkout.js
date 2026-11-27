@@ -31,6 +31,7 @@
   const retry = dialog.querySelector(".checkout-retry");
   const emailForm = dialog.querySelector(".checkout-email");
   const emailInput = emailForm.elements.email;
+  const actions = dialog.querySelector(".checkout-actions");
   const library = dialog.querySelector(".checkout-library");
   let sdk;
   let activeAttempt;
@@ -64,6 +65,7 @@
     retry.hidden = !check;
     library.hidden = !hasLibrary;
     emailForm.hidden = !askEmail;
+    actions.hidden = askEmail;
     if (open && !dialog.open) dialog.showModal();
     if (askEmail) emailInput.focus();
   }
