@@ -116,19 +116,25 @@
         <a href="#inside">Inside the guides</a>
         <a href="#coaching">Coaching</a>
         <a href="#faq">Questions</a>
-        <a href="/my-guides">My guides</a>
       </nav>
-      <a class="action header-action" href="#programs">Explore programs</a>
-      <details class="site-menu">
-        <summary>Menu</summary>
-        <nav aria-label="Mobile navigation">
-          <a href="#programs">Programs</a>
-          <a href="#inside">Inside the guides</a>
-          <a href="#coaching">Coaching</a>
-          <a href="#faq">Questions</a>
-          <a href="/my-guides">My guides</a>
-        </nav>
-      </details>
+      <div class="header-actions">
+        <a class="action header-action" href="#programs">Explore programs</a>
+        <details class="site-menu" name="header-menu">
+          <summary>Menu</summary>
+          <nav aria-label="Mobile navigation">
+            <a href="#programs">Programs</a>
+            <a href="#inside">Inside the guides</a>
+            <a href="#coaching">Coaching</a>
+            <a href="#faq">Questions</a>
+          </nav>
+        </details>
+        <details class="profile-menu" name="header-menu">
+          <summary><span class="profile-icon" aria-hidden="true"></span><span class="sr-only">Profile</span></summary>
+          <nav aria-label="Profile navigation">
+            <a href="/my-guides">My guides</a>
+          </nav>
+        </details>
+      </div>
     </div>
   </header>
 

@@ -7,25 +7,24 @@
     });
   }
 
-  const menu = document.querySelector(".site-menu");
-  const menuToggle = menu.querySelector("summary");
-
-  menu.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", () => {
-      menu.open = false;
+  for (const menu of document.querySelectorAll(".site-menu, .profile-menu")) {
+    menu.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => {
+        menu.open = false;
+      });
     });
-  });
 
-  document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || !menu.open) return;
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !menu.open) return;
 
-    menu.open = false;
-    menuToggle.focus();
-  });
+      menu.open = false;
+      menu.querySelector("summary").focus();
+    });
 
-  document.addEventListener("click", (event) => {
-    if (menu.open && !menu.contains(event.target)) menu.open = false;
-  });
+    document.addEventListener("click", (event) => {
+      if (menu.open && !menu.contains(event.target)) menu.open = false;
+    });
+  }
 
   const root = document.documentElement;
   const motionPreference = matchMedia("(prefers-reduced-motion: no-preference)");
